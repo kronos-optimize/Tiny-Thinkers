@@ -509,6 +509,8 @@ export default function TinyThinkersGame() {
   const [sightQuestions, setSightQuestions] = useState(() => shuffleArray(sightObjects).slice(0, 3))
   const [hearingQuestions, setHearingQuestions] = useState(() => shuffleArray(hearingSounds).slice(0, 3))
   const [thinkingQuestions, setThinkingQuestions] = useState(() => shuffleArray(thinkingPatterns).slice(0, 3))
+  const [sectionComplete, setSectionComplete] = useState(false)
+  const [pendingNextSection, setPendingNextSection] = useState<null | "hearing" | "thinking" | "journey-complete">(null)
 
   const audio = useAudio()
 
@@ -633,27 +635,14 @@ export default function TinyThinkersGame() {
           audio.playCelebrationSound()
           setTimeout(() => {
             if (gameType === "sight") {
-              audio.speak(`Incredible! ${characterName} can now see perfectly! Let's teach them to hear sounds!`, {
-                rate: 1.1,
-                pitch: 1.4,
-              })
-              setTimeout(() => {
-                startHearingGame()
-              }, 5000) // 5 second pause before next section
+              setSectionComplete(true)
+              setPendingNextSection("hearing")
             } else if (gameType === "hearing") {
-              audio.speak(`Amazing work! ${characterName} can now hear everything! Time to teach them to think!`, {
-                rate: 1.1,
-                pitch: 1.4,
-              })
-              setTimeout(() => {
-                startThinkingGame()
-              }, 5000) // 5 second pause before next section
+              setSectionComplete(true)
+              setPendingNextSection("thinking")
             } else if (gameType === "thinking") {
-              audio.speak(`Outstanding! ${characterName} can now think logically! What a smart AI friend!`, {
-                rate: 1.1,
-                pitch: 1.4,
-              })
-              setGameStage("journey-complete")
+              setSectionComplete(true)
+              setPendingNextSection("journey-complete")
             }
           }, 4000)
         }
@@ -840,6 +829,29 @@ export default function TinyThinkersGame() {
               </div>
             </Card>
           )}
+
+          {sectionComplete && pendingNextSection === "hearing" && (
+            <div className="flex justify-center mt-8">
+              <Button
+                className="bg-gradient-to-r from-green-400 to-blue-500 text-white text-2xl font-bold py-4 px-8 rounded-xl flex items-center gap-2"
+                onClick={() => {
+                  audio.speak(`Incredible! ${characterName} can now see perfectly! Let's teach them to hear sounds!`, { rate: 1.1, pitch: 1.4 })
+                  setHearingQuestions(shuffleArray(hearingSounds).slice(0, 3))
+                  setTimeout(() => {
+                    setGameStage("hearing-game")
+                    setCurrentRound(0)
+                    setShowCorrection(false)
+                    setUserAnswer("")
+                    setSectionComplete(false)
+                    setPendingNextSection(null)
+                    startGuessingSequence("hearing")
+                  }, 2000)
+                }}
+              >
+                Next <ArrowRight className="w-6 h-6" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -941,6 +953,29 @@ export default function TinyThinkersGame() {
                 <h2 className="text-3xl font-bold text-white">🎉 {characterName} can now hear! 🎉</h2>
               </div>
             </Card>
+          )}
+
+          {sectionComplete && pendingNextSection === "thinking" && (
+            <div className="flex justify-center mt-8">
+              <Button
+                className="bg-gradient-to-r from-green-400 to-blue-500 text-white text-2xl font-bold py-4 px-8 rounded-xl flex items-center gap-2"
+                onClick={() => {
+                  audio.speak(`Amazing work! ${characterName} can now hear everything! Time to teach them to think!`, { rate: 1.1, pitch: 1.4 })
+                  setThinkingQuestions(shuffleArray(thinkingPatterns).slice(0, 3))
+                  setTimeout(() => {
+                    setGameStage("thinking-game")
+                    setCurrentRound(0)
+                    setShowCorrection(false)
+                    setUserAnswer("")
+                    setSectionComplete(false)
+                    setPendingNextSection(null)
+                    startGuessingSequence("thinking")
+                  }, 2000)
+                }}
+              >
+                Next <ArrowRight className="w-6 h-6" />
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -1101,6 +1136,20 @@ export default function TinyThinkersGame() {
                 <h2 className="text-3xl font-bold text-white">🎉 {characterName} can now think! 🎉</h2>
               </div>
             </Card>
+          )}
+
+          {sectionComplete && pendingNextSection === "journey-complete" && (
+            <div className="flex justify-center mt-8">
+              <Button
+                className="bg-gradient-to-r from-green-400 to-blue-500 text-white text-2xl font-bold py-4 px-8 rounded-xl flex items-center gap-2"
+                onClick={() => {
+                  audio.speak(`Outstanding! ${characterName} can now think logically! What a smart AI friend!`, { rate: 1.1, pitch: 1.4 })
+                  setGameStage("journey-complete")
+                }}
+              >
+                Next <ArrowRight className="w-6 h-6" />
+              </Button>
+            </div>
           )}
         </div>
       </div>
