@@ -566,7 +566,7 @@ export default function TinyThinkersGame() {
     startGuessingSequence()
   }
 
-  const startGuessingSequence = () => {
+  const startGuessingSequence = (gameType?: "sight" | "hearing" | "thinking") => {
     setIsGuessing(true)
     setGuessingPhase("thinking")
     setShowSpeechBubble(true)
@@ -576,6 +576,20 @@ export default function TinyThinkersGame() {
       setGuessingPhase("guessing")
       // Add thinking sound
       audio.playTone?.(300, 0.5, "triangle")
+      // Trigger AI guess speech after guessing phase is set
+      setTimeout(() => {
+        let wrongGuess = ""
+        if (gameType === "sight") {
+          wrongGuess = `I think this is a ${sightQuestions[currentRound].wrongGuess}!`
+        } else if (gameType === "hearing") {
+          wrongGuess = `I think this sound is ${hearingQuestions[currentRound].wrongGuess}!`
+        } else if (gameType === "thinking") {
+          wrongGuess = `I think the next item is ${thinkingQuestions[currentRound].wrongGuess}!`
+        }
+        if (wrongGuess) {
+          audio.speak(wrongGuess, { rate: 1.0, pitch: 1.2 })
+        }
+      }, 500)
     }, 2000)
 
     // Guessing phase
@@ -590,9 +604,9 @@ export default function TinyThinkersGame() {
     if (gameType === "sight") {
       correctAnswer = sightQuestions[currentRound].name
     } else if (gameType === "hearing") {
-      correctAnswer = hearingSounds[currentRound].name
+      correctAnswer = hearingQuestions[currentRound].name
     } else {
-      correctAnswer = thinkingPatterns[currentRound].next
+      correctAnswer = thinkingQuestions[currentRound].next
     }
     // Only accept exact match or, for array, any exact match
     const isCorrect = Array.isArray(correctAnswer)
@@ -612,7 +626,7 @@ export default function TinyThinkersGame() {
           setCurrentRound(currentRound + 1)
           setShowCorrection(false)
           setUserAnswer("")
-          startGuessingSequence()
+          startGuessingSequence(gameType)
         } else {
           // Complete this training phase
           setGameProgress((prev) => ({ ...prev, [gameType]: true }))
@@ -661,23 +675,11 @@ export default function TinyThinkersGame() {
 
     if (guessingPhase === "guessing") {
       if (gameType === "sight") {
-        const wrongGuess = `I think this is a ${sightObjects[currentRound].wrongGuess}!`
-        setTimeout(() => {
-          audio.speak(wrongGuess, { rate: 1.0, pitch: 1.2 })
-        }, 500)
-        return wrongGuess
+        return `I think this is a ${sightQuestions[currentRound].wrongGuess}!`
       } else if (gameType === "hearing") {
-        const wrongGuess = `I think this sound is ${hearingSounds[currentRound].wrongGuess}!`
-        setTimeout(() => {
-          audio.speak(wrongGuess, { rate: 1.0, pitch: 1.2 })
-        }, 500)
-        return wrongGuess
+        return `I think this sound is ${hearingQuestions[currentRound].wrongGuess}!`
       } else {
-        const wrongGuess = `I think the next item is ${thinkingPatterns[currentRound].wrongGuess}!`
-        setTimeout(() => {
-          audio.speak(wrongGuess, { rate: 1.0, pitch: 1.2 })
-        }, 500)
-        return wrongGuess
+        return `I think the next item is ${thinkingQuestions[currentRound].wrongGuess}!`
       }
     }
 
@@ -848,11 +850,11 @@ export default function TinyThinkersGame() {
   }
 
   if (gameStage === "hearing-game") {
-    const currentSound = hearingSounds[currentRound]
-    const totalQuestions = hearingSounds.length
+    const currentSound = hearingQuestions[currentRound]
+    const totalQuestions = hearingQuestions.length
 
     // Prepare 4 choices: correct, wrong, and 2 random other (not correct/wrong)
-    const otherNames = hearingSounds
+    const otherNames = hearingQuestions
       .map((obj) => obj.name)
       .filter((name) => name !== currentSound.name && name !== currentSound.wrongGuess)
     const distractors = shuffleArray(otherNames).slice(0, 2)
@@ -950,8 +952,8 @@ export default function TinyThinkersGame() {
   }
 
   if (gameStage === "thinking-game") {
-    const currentPattern = thinkingPatterns[currentRound]
-    const totalQuestions = thinkingPatterns.length
+    const currentPattern = thinkingQuestions[currentRound]
+    const totalQuestions = thinkingQuestions.length
 
     // Prepare 4 choices: correct, wrong, and 2 random other (not correct/wrong)
     let allAnswers: string[] = []
@@ -959,20 +961,20 @@ export default function TinyThinkersGame() {
       allAnswers = [
         ...currentPattern.next,
         currentPattern.wrongGuess,
-        ...thinkingPatterns
+        ...thinkingQuestions
           .map((p) => (Array.isArray(p.next) ? p.next : [p.next]))
           .flat()
           .filter(
             (ans) =>
-              !currentPattern.next.includes(ans) &&
+              !(currentPattern.next as string[]).includes(ans) &&
               ans !== currentPattern.wrongGuess
           ),
       ]
     } else {
       allAnswers = [
-        currentPattern.next,
+        currentPattern.next as string,
         currentPattern.wrongGuess,
-        ...thinkingPatterns
+        ...thinkingQuestions
           .map((p) => (Array.isArray(p.next) ? p.next : [p.next]))
           .flat()
           .filter(
@@ -986,7 +988,7 @@ export default function TinyThinkersGame() {
       allAnswers.filter(
         (ans) =>
           (Array.isArray(currentPattern.next)
-            ? !currentPattern.next.includes(ans)
+            ? !(currentPattern.next as string[]).includes(ans)
             : ans !== currentPattern.next) &&
           ans !== currentPattern.wrongGuess
       )
@@ -1003,9 +1005,9 @@ export default function TinyThinkersGame() {
       correctChoices = [
         {
           label:
-            currentPattern.next.charAt(0).toUpperCase() +
-            currentPattern.next.slice(1),
-          value: currentPattern.next,
+            (currentPattern.next as string).charAt(0).toUpperCase() +
+            (currentPattern.next as string).slice(1),
+          value: currentPattern.next as string,
         },
       ]
     }
