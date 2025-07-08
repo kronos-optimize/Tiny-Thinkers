@@ -59,7 +59,7 @@ const hearingSounds = [
 const thinkingPatterns = [
   { pattern: ["🔴", "🔵", "🔴", "🔵"], next: "red", wrongGuess: "yellow" },
   // Accept both "four stars" and "⭐⭐⭐⭐" as correct
-  { pattern: ["⭐|  ", "⭐⭐|  ", "⭐⭐⭐|    "], next: ["four stars", "⭐⭐⭐⭐"], wrongGuess: "one star" },
+  { pattern: ["⭐|  ", "⭐⭐|  ", "⭐⭐⭐|  "], next: ["four stars", "⭐⭐⭐⭐"], wrongGuess: "one star" },
   { pattern: ["🌙", "☀️", "🌙", "☀️"], next: "moon", wrongGuess: "star" },
   { pattern: ["🍎", "🍊", "🍎", "🍊"], next: "apple", wrongGuess: "banana" },
 ]
@@ -378,6 +378,27 @@ function MazeGame({
     return () => clearTimeout(timer)
   }, [audio])
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowUp") {
+        moveDog("up");
+        e.preventDefault();
+      } else if (e.key === "ArrowDown") {
+        moveDog("down");
+        e.preventDefault();
+      } else if (e.key === "ArrowLeft") {
+        moveDog("left");
+        e.preventDefault();
+      } else if (e.key === "ArrowRight") {
+        moveDog("right");
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <div className="text-center">
       <div className="flex justify-center items-center gap-4 mb-6">
@@ -624,9 +645,9 @@ export default function TinyThinkersGame() {
               })
               setGameStage("journey-complete")
             }
-          }, 3000)
+          }, 4000)
         }
-      }, 2000)
+      }, 4000)
     } else {
       audio.playIncorrectSound()
       // Optional: Show a gentle hint if the answer is wrong
