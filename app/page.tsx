@@ -622,7 +622,7 @@ export default function TinyThinkersGame() {
       }, 300)
       setShowCorrection(true)
       setTimeout(() => {
-        if (currentRound < (gameType === "sight" ? sightQuestions.length - 1 : 2)) {
+        if (currentRound < (gameType === "sight" ? sightQuestions.length - 1 : hearingQuestions.length - 1)) {
           setCurrentRound(currentRound + 1)
           setShowCorrection(false)
           setUserAnswer("")
@@ -637,21 +637,17 @@ export default function TinyThinkersGame() {
                 rate: 1.1,
                 pitch: 1.4,
               })
-              setGameStage("hearing-game")
-              setCurrentRound(0)
-              setShowCorrection(false)
-              setUserAnswer("")
-              setTimeout(startGuessingSequence, 1000)
+              setTimeout(() => {
+                startHearingGame()
+              }, 5000) // 5 second pause before next section
             } else if (gameType === "hearing") {
               audio.speak(`Amazing work! ${characterName} can now hear everything! Time to teach them to think!`, {
                 rate: 1.1,
                 pitch: 1.4,
               })
-              setGameStage("thinking-game")
-              setCurrentRound(0)
-              setShowCorrection(false)
-              setUserAnswer("")
-              setTimeout(startGuessingSequence, 1000)
+              setTimeout(() => {
+                startThinkingGame()
+              }, 5000) // 5 second pause before next section
             } else if (gameType === "thinking") {
               audio.speak(`Outstanding! ${characterName} can now think logically! What a smart AI friend!`, {
                 rate: 1.1,
